@@ -1,7 +1,7 @@
-# pip install ... -i https://pypi.doubanio.com/simple
-
 # pytortch库安装
 # https://pytorch.org/get-started/previous-versions/
 
 # segment_anything库安装
 # pip install git+https://github.com/facebookresearch/segment-anything.git
+
+# pip install ... -i https://pypi.doubanio.com/simple

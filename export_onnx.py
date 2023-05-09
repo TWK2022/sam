@@ -17,79 +17,30 @@ try:
 except ImportError:
     onnxruntime_exists = False
 
-parser = argparse.ArgumentParser(
-    description="Export the SAM prompt encoder and mask decoder to an ONNX model."
-)
+parser = argparse.ArgumentParser(description="Export the SAM prompt encoder and mask decoder to an ONNX model.")
+parser.add_argument("--checkpoint", type=str, default='vit_l.pth', help="The path to the SAM model checkpoint.")
+parser.add_argument("--output", type=str, default='sam.onnx', help="The filename to save the ONNX model to.")
+parser.add_argument("--model-type", type=str, default='vit_l',
+                    help="In ['default', 'vit_h', 'vit_l', 'vit_b']. Which type of SAM model to export.", )
+parser.add_argument("--return-single-mask", action="store_true", help=(
+    "If true, the exported ONNX model will only return the best mask, "
+    "instead of returning multiple masks. For high resolution images "
+    "this can improve runtime when upscaling masks is expensive."))
+parser.add_argument("--opset", type=int, default=17, help="The ONNX opset version to use. Must be >=11", )
+parser.add_argument("--quantize-out", type=str, default=None, help=(
+    "If set, will quantize the model and save it with this name. "
+    "Quantization is performed with quantize_dynamic from onnxruntime.quantization.quantize."))
 
-parser.add_argument(
-    "--checkpoint", type=str, default='vit_l.pth', help="The path to the SAM model checkpoint."
-)
-
-parser.add_argument(
-    "--output", type=str, default='sam.onnx', help="The filename to save the ONNX model to."
-)
-
-parser.add_argument(
-    "--model-type",
-    type=str,
-    default='vit_l',
-    help="In ['default', 'vit_h', 'vit_l', 'vit_b']. Which type of SAM model to export.",
-)
-
-parser.add_argument(
-    "--return-single-mask",
-    action="store_true",
-    help=(
-        "If true, the exported ONNX model will only return the best mask, "
-        "instead of returning multiple masks. For high resolution images "
-        "this can improve runtime when upscaling masks is expensive."
-    ),
-)
-
-parser.add_argument(
-    "--opset",
-    type=int,
-    default=17,
-    help="The ONNX opset version to use. Must be >=11",
-)
-
-parser.add_argument(
-    "--quantize-out",
-    type=str,
-    default=None,
-    help=(
-        "If set, will quantize the model and save it with this name. "
-        "Quantization is performed with quantize_dynamic from onnxruntime.quantization.quantize."
-    ),
-)
-
-parser.add_argument(
-    "--gelu-approximate",
-    action="store_true",
-    help=(
-        "Replace GELU operations with approximations using tanh. Useful "
-        "for some runtimes that have slow or unimplemented erf ops, used in GELU."
-    ),
-)
-
-parser.add_argument(
-    "--use-stability-score",
-    action="store_true",
-    help=(
-        "Replaces the model's predicted mask quality score with the stability "
-        "score calculated on the low resolution masks using an offset of 1.0. "
-    ),
-)
-
-parser.add_argument(
-    "--return-extra-metrics",
-    action="store_true",
-    help=(
-        "The model will return five results: (masks, scores, stability_scores, "
-        "areas, low_res_logits) instead of the usual three. This can be "
-        "significantly slower for high resolution outputs."
-    ),
-)
+parser.add_argument("--gelu-approximate", action="store_true",
+                    help=("Replace GELU operations with approximations using tanh. Useful "
+                          "for some runtimes that have slow or unimplemented erf ops, used in GELU."))
+parser.add_argument("--use-stability-score", action="store_true", help=(
+    "Replaces the model's predicted mask quality score with the stability "
+    "score calculated on the low resolution masks using an offset of 1.0. "))
+parser.add_argument("--return-extra-metrics", action="store_true", help=(
+    "The model will return five results: (masks, scores, stability_scores, "
+    "areas, low_res_logits) instead of the usual three. This can be "
+    "significantly slower for high resolution outputs."))
 args = parser.parse_args()
 
 
@@ -105,24 +56,20 @@ def run_export(
 ):
     print("Loading model...")
     sam = sam_model_registry[model_type](checkpoint=checkpoint)
-
     onnx_model = SamOnnxModel(
         model=sam,
         return_single_mask=return_single_mask,
         use_stability_score=use_stability_score,
         return_extra_metrics=return_extra_metrics,
     )
-
     if gelu_approximate:
         for n, m in onnx_model.named_modules():
             if isinstance(m, torch.nn.GELU):
                 m.approximate = "tanh"
-
     dynamic_axes = {
         "point_coords": {1: "num_points"},
         "point_labels": {1: "num_points"},
     }
-
     embed_dim = sam.prompt_encoder.embed_dim
     embed_size = sam.prompt_encoder.image_embedding_size
     mask_input_size = [4 * x for x in embed_size]
@@ -134,11 +81,8 @@ def run_export(
         "has_mask_input": torch.tensor([1], dtype=torch.float),
         "orig_im_size": torch.tensor([1500, 2250], dtype=torch.float),
     }
-
     _ = onnx_model(**dummy_inputs)
-
     output_names = ["masks", "iou_predictions", "low_res_masks"]
-
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=torch.jit.TracerWarning)
         warnings.filterwarnings("ignore", category=UserWarning)
@@ -156,7 +100,6 @@ def run_export(
                 output_names=output_names,
                 dynamic_axes=dynamic_axes,
             )
-
     if onnxruntime_exists:
         ort_inputs = {k: to_numpy(v) for k, v in dummy_inputs.items()}
         # set cpu provider default
