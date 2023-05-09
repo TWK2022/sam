@@ -15,7 +15,7 @@ parser = argparse.ArgumentParser(description="|只是将SAM的提示编码部分
 parser.add_argument("--checkpoint", type=str, default='vit_h.pth', help="|pth模型位置|")
 parser.add_argument("--model_type", type=str, default='vit_h', help="|pth模型型号|", )
 parser.add_argument("--output", type=str, default='sam_part.onnx', help="|保存onnx模型位置|")
-parser.add_argument("--singlemask", type=bool, default=False, help=("|根据提示点分割，True时输出1个得分最高的掩码，False时输出3个|"))
+parser.add_argument("--singlemask", type=bool, default=False, help=("|根据提示点分割，True时输出1个得分最高的掩码，False时输出多个|"))
 parser.add_argument("--opset", type=int, default=17, help="The ONNX opset version to use. Must be >=11", )
 parser.add_argument("--quantize-out", type=str, default=None, help=(
     "If set, will quantize the model and save it with this name. "
