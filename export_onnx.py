@@ -30,7 +30,6 @@ parser.add_argument("--opset", type=int, default=17, help="The ONNX opset versio
 parser.add_argument("--quantize-out", type=str, default=None, help=(
     "If set, will quantize the model and save it with this name. "
     "Quantization is performed with quantize_dynamic from onnxruntime.quantization.quantize."))
-
 parser.add_argument("--gelu-approximate", action="store_true",
                     help=("Replace GELU operations with approximations using tanh. Useful "
                           "for some runtimes that have slow or unimplemented erf ops, used in GELU."))
