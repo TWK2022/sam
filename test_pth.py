@@ -16,11 +16,8 @@ parser.add_argument('--input_label', default=[1], type=list, help='|表示input_
 args = parser.parse_args()
 
 
-def draw_mask(mask, ax, random_color=True):
-    if random_color:
-        color = np.concatenate([np.random.random(3), np.array([0.6])], axis=0)
-    else:
-        color = np.array([30 / 255, 144 / 255, 255 / 255, 0.6])
+def draw_mask(mask, ax):
+    color = np.array([30 / 255, 144 / 255, 255 / 255, 0.6])
     h, w = mask.shape[-2:]
     mask_image = mask.reshape(h, w, 1) * color.reshape(1, 1, -1)
     ax.imshow(mask_image)

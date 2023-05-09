@@ -54,7 +54,6 @@ if __name__ == '__main__':
     # 分割
     predictor = segment_anything.SamPredictor(model)
     predictor.set_image(image)
-
     image_embedding = predictor.get_image_embedding().cpu().numpy()
     onnx_coord = np.concatenate([input_point, np.array([[0.0, 0.0]])], axis=0)[None, :, :]
     onnx_label = np.concatenate([input_label, np.array([-1])], axis=0)[None, :].astype(np.float32)
@@ -70,9 +69,10 @@ if __name__ == '__main__':
         "orig_im_size": np.array(image.shape[:2], dtype=np.float32)
     }
     masks, scores, _ = onnx_model.run(None, ort_inputs)
+    # print(f'| masks:{masks.shape},{masks.dtype} scores:{scores.shape},{scores.dtype} |')
     # 画图
-    for batch in masks:
-        for i, (mask, score) in enumerate(zip(batch, scores)):
+    for mask_batch, score_batch in zip(masks, scores):
+        for i, (mask, score) in enumerate(zip(mask_batch, score_batch)):
             name = f"Mask_{i + 1}__Score_{score:.3f}"
             plt.title(name)
             plt.imshow(image)
