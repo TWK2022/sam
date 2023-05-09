@@ -7,9 +7,9 @@ import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser(description='|onnx模型推理|')
 parser.add_argument('--image_path', default='demo.jpg', type=str, help='|图片位置|')
-parser.add_argument('--checkpoint', default='vit_l.pth', type=str, help='|模型位置|')
-parser.add_argument('--model_type', default='vit_l', type=str, help='|型号|')
-parser.add_argument('--onnx_model_path', default='sam.onnx', type=str, help='|模型位置|')
+parser.add_argument('--checkpoint', default='vit_h.pth', type=str, help='|模型位置|')
+parser.add_argument('--model_type', default='vit_h', type=str, help='|型号|')
+parser.add_argument('--onnx_model_path', default='sam_part.onnx', type=str, help='|模型位置|')
 parser.add_argument('--device', default='cuda', type=str, help='|设备|')
 parser.add_argument('--input_point', default=[[260, 200]], type=list, help='|根据提示点所在图层分割图片，如[[260, 200],...]|')
 parser.add_argument('--input_label', default=[1], type=list, help='|表示input_point是要分割的点还是抑制的点，1表示分割，0表示抑制，如[1,...]|')
@@ -17,7 +17,7 @@ args = parser.parse_args()
 
 
 def draw_mask(mask, ax):
-    color = np.array([30/255, 144/255, 255/255, 0.6])
+    color = np.array([30 / 255, 144 / 255, 255 / 255, 0.6])
     h, w = mask.shape[-2:]
     mask_image = mask.reshape(h, w, 1) * color.reshape(1, 1, -1)
     ax.imshow(mask_image)
@@ -70,8 +70,13 @@ if __name__ == '__main__':
         "orig_im_size": np.array(image.shape[:2], dtype=np.float32)
     }
     masks, scores, _ = onnx_model.run(None, ort_inputs)
-    print(masks.shape)
-    plt.imshow(image)
-    draw_mask(masks, plt.gca())
-    draw_point(input_point, input_label, plt.gca())
-    plt.savefig(f"test.jpg")
+    # 画图
+    for batch in masks:
+        for i, (mask, score) in enumerate(zip(batch, scores)):
+            name = f"Mask_{i + 1}__Score_{score:.3f}"
+            plt.title(name)
+            plt.imshow(image)
+            draw_mask(mask, plt.gca())
+            draw_point(input_point, input_label, plt.gca())
+            plt.savefig(f"{name}.jpg")
+            print(f'| 保存图片:{name} |')
