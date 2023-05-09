@@ -28,6 +28,6 @@
 >python test_pth_onnx.py --image_path demo.jpg --checkpoint vit_l.pth --model_type vit_l --onnx_model_path sam_part.onnx --device cuda
 >```
 ### 其他
->github链接：https://github.com/TWK2022/  
+>github链接：https://github.com/TWK2022/sam  
 >学习笔记：https://github.com/TWK2022/notebook  
 >邮箱：1024565378@qq.com  
