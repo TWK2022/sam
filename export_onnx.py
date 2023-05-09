@@ -11,15 +11,11 @@ try:
 except ImportError:
     onnxruntime_exists = False
 
-parser = argparse.ArgumentParser(description="Export the SAM prompt encoder and mask decoder to an ONNX model.")
-parser.add_argument("--checkpoint", type=str, default='vit_l.pth', help="The path to the SAM model checkpoint.")
-parser.add_argument("--output", type=str, default='sam.onnx', help="The filename to save the ONNX model to.")
-parser.add_argument("--model_type", type=str, default='vit_l.pth',
-                    help="In ['default', 'vit_h', 'vit_l', 'vit_b']. Which type of SAM model to export.", )
-parser.add_argument("--return-single-mask", action="store_true", help=(
-    "If true, the exported ONNX model will only return the best mask, "
-    "instead of returning multiple masks. For high resolution images "
-    "this can improve runtime when upscaling masks is expensive."))
+parser = argparse.ArgumentParser(description="|只是将SAM的提示编码部分、掩码解码部分导出为onnx|")
+parser.add_argument("--checkpoint", type=str, default='vit_l.pth', help="|pth模型位置|")
+parser.add_argument("--model_type", type=str, default='vit_l', help="|pth模型型号|", )
+parser.add_argument("--output", type=str, default='sam.onnx', help="|保存onnx模型位置|")
+parser.add_argument("--singlemask", type=bool, default=True, help=("|根据提示点分割，True时输出1个得分最高的掩码，False时输出3个|"))
 parser.add_argument("--opset", type=int, default=17, help="The ONNX opset version to use. Must be >=11", )
 parser.add_argument("--quantize-out", type=str, default=None, help=(
     "If set, will quantize the model and save it with this name. "
@@ -99,7 +95,7 @@ def run_export(
         providers = ["CPUExecutionProvider"]
         ort_session = onnxruntime.InferenceSession(output, providers=providers)
         _ = ort_session.run(None, ort_inputs)
-        print("Model has successfully been run with ONNXRuntime.")
+        print(f"Model has successfully been run with ONNXRuntime:{output}")
 
 
 def to_numpy(tensor):
@@ -112,12 +108,11 @@ if __name__ == "__main__":
         checkpoint=args.checkpoint,
         output=args.output,
         opset=args.opset,
-        return_single_mask=args.return_single_mask,
+        return_single_mask=args.singlemask,
         gelu_approximate=args.gelu_approximate,
         use_stability_score=args.use_stability_score,
         return_extra_metrics=args.return_extra_metrics,
     )
-
     if args.quantize_out is not None:
         assert onnxruntime_exists, "onnxruntime is required to quantize the model."
         from onnxruntime.quantization import QuantType  # type: ignore
