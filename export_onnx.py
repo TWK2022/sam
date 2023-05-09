@@ -1,9 +1,3 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# All rights reserved.
-
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
-
 import torch
 from segment_anything import sam_model_registry
 from segment_anything.utils.onnx import SamOnnxModel
@@ -20,7 +14,7 @@ except ImportError:
 parser = argparse.ArgumentParser(description="Export the SAM prompt encoder and mask decoder to an ONNX model.")
 parser.add_argument("--checkpoint", type=str, default='vit_l.pth', help="The path to the SAM model checkpoint.")
 parser.add_argument("--output", type=str, default='sam.onnx', help="The filename to save the ONNX model to.")
-parser.add_argument("--model-type", type=str, default='vit_l',
+parser.add_argument("--model_type", type=str, default='vit_l.pth',
                     help="In ['default', 'vit_h', 'vit_l', 'vit_b']. Which type of SAM model to export.", )
 parser.add_argument("--return-single-mask", action="store_true", help=(
     "If true, the exported ONNX model will only return the best mask, "

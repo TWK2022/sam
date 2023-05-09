@@ -1,4 +1,3 @@
-# python export_onnx.py --checkpoint vit_l.pth --model-type vit_l --output sam.onnx
 import cv2
 import argparse
 import numpy as np
@@ -7,7 +6,7 @@ import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('--image_path', default='demo.jpg', type=str, help='|图片位置|')
-parser.add_argument('--weight', default='vit_l.pth', type=str, help='|模型位置|')
+parser.add_argument('--checkpoint', default='vit_l.pth', type=str, help='|模型位置|')
 parser.add_argument('--model_type', default='vit_l', type=str, help='|型号|')
 parser.add_argument('--device', default='cuda', type=str, help='|设备|')
 args = parser.parse_args()
@@ -40,7 +39,7 @@ def show_box(box, ax):
 
 # 模型
 if __name__ == '__main__':
-    model = segment_anything.sam_model_registry[args.model_type](checkpoint=args.weight).to(args.device)
+    model = segment_anything.sam_model_registry[args.model_type](checkpoint=args.checkpoint).to(args.device)
     predictor = segment_anything.SamPredictor(model)
     # 数据
     image = cv2.imread(args.image_path)
@@ -62,5 +61,7 @@ if __name__ == '__main__':
         plt.imshow(image)
         show_mask(mask, plt.gca())
         show_points(input_point, input_label, plt.gca())
-        plt.title(f"Mask_{i + 1}__Score_{score:.3f}")
-        plt.savefig(f"Mask_{i + 1}__Score_{score:.3f}.jpg")
+        name = f"Mask_{i + 1}__Score_{score:.2f}"
+        plt.title(name)
+        plt.savefig(f"{name}.jpg")
+        print(f'| 保存图片:{name} |')
